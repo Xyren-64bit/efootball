@@ -37,19 +37,17 @@ def decrypt_file(input_file, output_file, key):
     except Exception as e:
         print(f"Error decrypting file {input_file}: {e}")
 
-def extract_file_with_unrealpak(file_path, output_dir):
+def extract_file_with_unrealpak(file_path, output_dir, unrealpak_path):
     """
-    Extract a file using UnrealPak.
+    Extract a file using UnrealPak on Linux.
 
     Args:
         file_path (str): Path to the decrypted .pak file.
         output_dir (str): Directory to save the extracted files.
+        unrealpak_path (str): Path to the UnrealPak tool.
     """
-    # Replace this path with the path to UnrealPak.exe or equivalent tool
-    unrealpak_path = "/path/to/UnrealPak"
-
     if not os.path.exists(unrealpak_path):
-        raise FileNotFoundError("UnrealPak tool not found. Please set the correct path.")
+        raise FileNotFoundError(f"UnrealPak tool not found at: {unrealpak_path}")
 
     try:
         command = [unrealpak_path, file_path, "-Extract", output_dir]
@@ -58,13 +56,14 @@ def extract_file_with_unrealpak(file_path, output_dir):
     except subprocess.CalledProcessError as e:
         print(f"Error extracting file {file_path}: {e}")
 
-def process_files(directory, key):
+def process_files(directory, key, unrealpak_path):
     """
     Decrypt and extract files in the given directory.
 
     Args:
         directory (str): Path to the directory containing files to process.
         key (bytes): The 256-bit AES key (32 bytes).
+        unrealpak_path (str): Path to the UnrealPak tool.
     """
     for root, _, files in os.walk(directory):
         for file in files:
@@ -77,7 +76,7 @@ def process_files(directory, key):
                 decrypt_file(input_file, decrypted_file, key)
 
                 # Step 2: Extract the decrypted file
-                extract_file_with_unrealpak(decrypted_file, output_dir)
+                extract_file_with_unrealpak(decrypted_file, output_dir, unrealpak_path)
 
 if __name__ == "__main__":
     # Get the directory of the script
@@ -87,5 +86,4 @@ if __name__ == "__main__":
     aes_key_hex = "4552D45005DFE94964893F4925EC747D3D591401E060ED8B3D58BE5721C81295"
     aes_key = bytes.fromhex(aes_key_hex)
 
-    # Process files
-    process_files(script_dir, aes_key)
+    # Path to UnrealPak
