@@ -1,4 +1,5 @@
 import os
+import subprocess
 from Crypto.Cipher import AES
 
 def decrypt_file(input_file, output_file, key):
@@ -36,20 +37,47 @@ def decrypt_file(input_file, output_file, key):
     except Exception as e:
         print(f"Error decrypting file {input_file}: {e}")
 
-def find_and_decrypt_files(directory, key):
+def extract_file_with_unrealpak(file_path, output_dir):
     """
-    Find and decrypt .ucas, .utoc, and .pak files in the specified directory.
+    Extract a file using UnrealPak.
 
     Args:
-        directory (str): Path to the directory.
+        file_path (str): Path to the decrypted .pak file.
+        output_dir (str): Directory to save the extracted files.
+    """
+    # Replace this path with the path to UnrealPak.exe or equivalent tool
+    unrealpak_path = "/path/to/UnrealPak"
+
+    if not os.path.exists(unrealpak_path):
+        raise FileNotFoundError("UnrealPak tool not found. Please set the correct path.")
+
+    try:
+        command = [unrealpak_path, file_path, "-Extract", output_dir]
+        subprocess.run(command, check=True)
+        print(f"Extracted: {file_path} -> {output_dir}")
+    except subprocess.CalledProcessError as e:
+        print(f"Error extracting file {file_path}: {e}")
+
+def process_files(directory, key):
+    """
+    Decrypt and extract files in the given directory.
+
+    Args:
+        directory (str): Path to the directory containing files to process.
         key (bytes): The 256-bit AES key (32 bytes).
     """
     for root, _, files in os.walk(directory):
         for file in files:
             if file.endswith((".ucas", ".utoc", ".pak")):
                 input_file = os.path.join(root, file)
-                output_file = os.path.join(root, f"decrypted_{file}")
-                decrypt_file(input_file, output_file, key)
+                decrypted_file = os.path.join(root, f"decrypted_{file}")
+                output_dir = os.path.join(root, f"extracted_{file}")
+
+                # Step 1: Decrypt the file
+                decrypt_file(input_file, decrypted_file, key)
+
+                # Step 2: Extract the decrypted file
+                extract_file_with_unrealpak(decrypted_file, output_dir)
 
 if __name__ == "__main__":
     # Get the directory of the script
@@ -59,5 +87,5 @@ if __name__ == "__main__":
     aes_key_hex = "4552D45005DFE94964893F4925EC747D3D591401E060ED8B3D58BE5721C81295"
     aes_key = bytes.fromhex(aes_key_hex)
 
-    # Find and decrypt files
-    find_and_decrypt_files(script_dir, aes_key)
+    # Process files
+    process_files(script_dir, aes_key)
